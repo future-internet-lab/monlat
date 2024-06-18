@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: monitor-latency
+  labels:
+    app: monitor-latency
+spec:
+  type: ClusterIP
+  selector:
+    app: monitor-latency
+  ports:
+  - name: http-metrics
+    port: 9090
+    targetPort: 9090
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitor-latency
+  namespace: default
+  labels:
+    app: monitor-latency
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: monitor-latency
+  template:
+    metadata:
+      labels:
+        app: monitor-latency
+    spec:
+      serviceAccount: monitor-latency
+      hostname: monitor-latency
+      containers:
+      - name: monitor-latency
+        image: docker.io/bonavadeur/monitor-latency:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9090
+          name: http-metrics
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: 9090
+          initialDelaySeconds: 20
+          periodSeconds: 10
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - node1
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: monitor-latency
+  name: monitor-latency
+  namespace: default
+spec:
+  endpoints:
+  - honorLabels: true
+    interval: 1s
+    path: /metrics
+    port: http-metrics
+  namespaceSelector:
+    matchNames:
+    - default
+  selector:
+    matchLabels:
+      app: monitor-latency
+---
