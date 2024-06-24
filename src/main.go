@@ -33,7 +33,7 @@ func main() {
 	podLog := make([]*rest.Request, len(nodes.Items))
 	log := make([]string, len(nodes.Items))
 	podName := make([]string, len(nodes.Items))
-	line := int64(2)
+	line := int64(len(nodes.Items)-1)
 	for i := 1; i <= len(nodes.Items); i++ {
 		podName[i-1] = "monlat-agent-" + strconv.Itoa(i)
 		podLog[i-1] = clientset.CoreV1().Pods("default").GetLogs(podName[i-1], &corev1.PodLogOptions{
