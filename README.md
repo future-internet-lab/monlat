@@ -39,11 +39,11 @@ chmod +x render.sh
 ./render.sh
 ```
 
-A new file named [manifest/monitor-latency-agents.yaml](manifest/monitor-latency-agents.yaml) has been created!
+A new file named [manifest/monlat-agents.yaml](manifest/monlat-agents.yaml) has been created!
 
 ### 2.3. Build Image
 
-Rebuild image of `monitor-latency` component if you need. Let's take a quick view in [src/build.sh](src/build.sh). Then, rebuild image if you need.
+Rebuild image of `monlat` component if you need. Let's take a quick view in [src/build.sh](src/build.sh). Then, rebuild image if you need.
 
 ```bash
 cd src
@@ -52,7 +52,7 @@ vi build.sh
 #####CONFIG HERE#####
 HUB="bonavadeur" # docker.io/$HUB/$NAME:$TAG
 TAG="latest"
-NAME="monitor-latency"
+NAME="monlat"
 #####################
 ...
 
@@ -64,14 +64,14 @@ cd ..
 
 ### 2.4. Some other small changes
 
-Specify image you use to run `monitor-latency` and specified Nodes you want to deploy it in `Deployment` in file [manifest/monitor-latency.yaml](manifest/monitor-latency.yaml)
+Specify image you use to run `monlat` and specified Nodes you want to deploy it in `Deployment` in file [manifest/monlat.yaml](manifest/monlat.yaml)
 
 ### 2.5. Install!
 
 ```bash
 kubectl apply -f manifest/rbac.yaml
-kubectl apply -f manifest/monitor-latency-agents.yaml
-kubectl apply -f manifest/monitor-latency.yaml
+kubectl apply -f manifest/monlat-agents.yaml
+kubectl apply -f manifest/monlat.yaml
 ```
 
 Assume that Your Kubernetes run Prometheus before. Metrics are updated to prometheus immediately with metrics `latency_between_nodes`.

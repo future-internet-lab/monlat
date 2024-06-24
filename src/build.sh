@@ -3,7 +3,7 @@
 #####CONFIG HERE#####
 HUB="bonavadeur" # docker.io/$HUB/$NAME:$TAG
 TAG="latest"
-NAME="monitor-latency"
+NAME="monlat"
 #####################
 
 GREEN="\e[32m"

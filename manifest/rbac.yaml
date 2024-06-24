@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: monitor-latency
+  name: monlat
   namespace: default
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: monitor-latency
+  name: monlat
   namespace: default
 rules:
 - apiGroups: [""]
@@ -20,21 +20,21 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: monitor-latency
+  name: monlat
   namespace: default
 subjects:
 - kind: ServiceAccount
-  name: monitor-latency
+  name: monlat
   namespace: default
 roleRef:
   kind: Role
-  name: monitor-latency
+  name: monlat
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: monitor-latency
+  name: monlat
 rules:
 - apiGroups: [""]
   resources: ["nodes"]
@@ -43,13 +43,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: monitor-latency
+  name: monlat
 subjects:
 - kind: ServiceAccount
-  name: monitor-latency
+  name: monlat
   namespace: default
 roleRef:
   kind: ClusterRole
-  name: monitor-latency
+  name: monlat
   apiGroup: rbac.authorization.k8s.io
 ---
