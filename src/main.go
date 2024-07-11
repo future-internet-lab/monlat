@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"strconv"
+	"sort"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -17,30 +17,31 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+var (
+	KUBECONFIG *rest.Config
+	CLIENTSET  *kubernetes.Clientset
+)
+
+func init() {
+	var err error
+	KUBECONFIG, err = rest.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+	CLIENTSET, err = kubernetes.NewForConfig(KUBECONFIG)
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
 func main() {
-	config, err := rest.InClusterConfig()
-	if err != nil {
-		panic(err.Error())
-	}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err.Error())
-	}
+	// get node and nodenames, nodes is sorted by nodename
+	nodes, nodenames := getNode()
+	
+	log := make([]string, len(nodes.Items))
+	podLog := getPodLog(nodes, nodenames)
 
 	e := echo.New()
-
-	nodes, _ := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
-	podLog := make([]*rest.Request, len(nodes.Items))
-	log := make([]string, len(nodes.Items))
-	podName := make([]string, len(nodes.Items))
-	line := int64(len(nodes.Items)-1)
-	for i := 1; i <= len(nodes.Items); i++ {
-		podName[i-1] = "monlat-agent-" + strconv.Itoa(i)
-		podLog[i-1] = clientset.CoreV1().Pods("default").GetLogs(podName[i-1], &corev1.PodLogOptions{
-			TailLines: &line,
-		})
-	}
-
 	e.GET("/metrics", func(c echo.Context) error {
 		for i := 0; i < len(nodes.Items); i++ {
 			podLogs, err := podLog[i].Stream(context.TODO())
@@ -68,4 +69,42 @@ func main() {
 	})
 
 	e.Logger.Fatal(e.Start(":9090"))
+}
+
+func getNode() (*corev1.NodeList, []string) {
+	nodes, _ := CLIENTSET.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+
+	sort.Slice(nodes.Items, func(i, j int) bool {
+		return nodes.Items[i].Name < nodes.Items[j].Name
+	})
+
+	nodenames := make([]string, len(nodes.Items))
+	for i := 0; i < len(nodes.Items); i++ {
+		nodenames[i] = nodes.Items[i].Name
+	}
+
+	return nodes, nodenames
+}
+
+func getPodLog(nodes *corev1.NodeList, nodenames []string) []*rest.Request {
+	podLog := make([]*rest.Request, len(nodes.Items))
+	line := int64(len(nodes.Items) - 1)
+
+	pods, err := CLIENTSET.CoreV1().Pods("default").List(context.TODO(), metav1.ListOptions{
+		LabelSelector: "app=monlat-agent",
+	})
+	if err != nil {
+		panic(err.Error())
+	}
+
+	for _, pod := range pods.Items {
+		for i, nodename := range nodenames {
+			if pod.Spec.NodeName == nodename {
+				podLog[i] = CLIENTSET.CoreV1().Pods("default").GetLogs(pod.Name, &corev1.PodLogOptions{
+					TailLines: &line,
+				})
+			}
+		}
+	}
+	return podLog
 }

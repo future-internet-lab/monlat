@@ -3,7 +3,7 @@
 #####CONFIG HERE#####
 DOCKERHUB="bonavadeur"
 TAG="v2"
-NAME="monlat" # docker.io/$DOCKERHUB/$NAME:$TAG
+NAME="monlat-agent" # docker.io/$DOCKERHUB/$NAME:$TAG
 #####################
 
 GREEN="\e[32m"

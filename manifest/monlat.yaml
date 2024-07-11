@@ -34,8 +34,8 @@ spec:
       hostname: monlat
       containers:
       - name: monlat
-        image: docker.io/bonavadeur/monlat:latest
-        imagePullPolicy: IfNotPresent
+        image: docker.io/bonavadeur/monlat:v2
+        imagePullPolicy: Always
         ports:
         - containerPort: 9090
           name: http-metrics
